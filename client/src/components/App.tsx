@@ -27,11 +27,11 @@ const App = () => {
 
 
   useEffect(() => {
-    let id = ''
-    for(let i = 0; i < 6; i++) {
-      id += Math.floor(Math.random() * 10).toString();
-    }
-    setUserId(id);
+    // let id = ''
+    // for(let i = 0; i < 6; i++) {
+    //   id += Math.floor(Math.random() * 10).toString();
+    // }
+    // setUserId(id);
 
 
     socket.on("connect", () => {
@@ -44,7 +44,7 @@ const App = () => {
     <Router>
       <Routes>
         <Route path="/" element={<Homepage />} />
-        <Route path="/join" element={<Join setChwazi={setChwazi} uid={userId} setLobby={setLobby}/>} />
+        <Route path="/join" element={<Join setChwazi={setChwazi} uid={userId} setUID={setUserId} setLobby={setLobby}/>} />
         <Route path="/lobby" element={<Lobby code={chwazi} lobby={lobby} setLobby={setLobby}/>} />
         <Route path="/input" element={<InputChwazi uid={userId} cid={chwazi} setBill={setBill}/>} />
         <Route path="/verify" element={<VerifyBill cid={chwazi} bills={bill} uid={userId!} setChosen={setChosen}/> } />

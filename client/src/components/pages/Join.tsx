@@ -6,12 +6,17 @@ import { RouteComponentProps } from "@reach/router";
 import { socket } from "../../client-socket";
 
 
-type JoinProps = RouteComponentProps & {setChwazi: any, setLobby: any, uid: any}
+type JoinProps = RouteComponentProps & {setChwazi: any, setLobby: any, uid: any, setUID: any}
 const Join = (props: JoinProps) => {
+    const [name, setName] = useState('')
     const [code, setCode] = useState('');
     const [error, setError] = useState('');
     const navigate = useNavigate();
 
+    const handleNameChange = (name) => {
+        setName(name)
+        props.setUID(name)
+    }
     const handleChange = (code) => {
         if (code.length > 6) {
           code = code.substring(0, 6);
@@ -45,6 +50,12 @@ const Join = (props: JoinProps) => {
 
     return (
         <div className="Join-body">
+            <input
+                className="Join-input"
+                placeholder="enter username"
+                value={name}
+                onChange={(event) => {handleNameChange(event.target.value)}}
+            />
             <input
                 className="Join-input"
                 placeholder="enter chwazi code"
