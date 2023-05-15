@@ -11,42 +11,12 @@ import api from "./api";
 // Loads environmental variables
 dotenv.config({});
 
-// Server configuration below
-// TODO change connection URL after setting up your team database and creating the .env file
-const mongoConnectionURL = process.env.MONGO_SRV;
-// TODO change database name to the name you chose
-const databaseName = "IncludeYourDatabaseNameHere";
-
-// if (mongoConnectionURL === undefined) {
-//   throw new Error("Please add the MongoDB connection SRV as 'MONGO_SRV'");
-// }
-// mongoose
-//   .connect(mongoConnectionURL, {
-//     useNewUrlParser: true,
-//     useUnifiedTopology: true,
-//     dbName: databaseName,
-//   })
-//   .then(() => console.log("Connected to MongoDB"))
-//   .catch((err) => console.log(`Error connecting to MongoDB: ${err}`));
-
 // Create a new Express server
 const app = express();
 
 // Middleware setup.
 app.use(express.json());
 app.use(morgan("dev")); // To change the format of logs: https://github.com/expressjs/morgan#predefined-formats
-// const sessionSecret = process.env.SESSION_SECRET;
-// if (sessionSecret === undefined) {
-//   throw new Error("Please add a session secret as 'SESSION_SECRET'");
-// }
-// app.use(
-//   session({
-//     secret: sessionSecret,
-//     resave: false,
-//     saveUninitialized: false,
-//   })
-// );
-// app.use(auth.populateCurrentUser);
 app.use("/api", api);
 
 // Serves the frontend code
