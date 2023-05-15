@@ -106,29 +106,38 @@ export const init = (server: http.Server): void => {
       if (state.toBroadcast !== null) {
         console.log("broadcasting,", response);
         chwaziToUserMap.get(req.cid)?.forEach((u) => {
-          userToSocketMap.get(u)?.emit("test", response);
+          userToSocketMap.get(u)?.emit("p1Response", response);
         });
 
         state.markAsSent();
       }
     });
+
+    socket.on("p2Confirm", (req: { cid: string, name: string }) => {
+      const { cid, name } = req;
+      console.log(req);
+      const state = chwaziToStateMap.get(cid);
+      if (state === undefined) {
+        console.log(`did not start cid ${cid} yet`);
+        return;
+      }
+
+      const response = state.handleEvent({ ty: "p2Confirm", name });
+
+      if (state.toBroadcast !== null) {
+        chwaziToUserMap.get(req.cid)?.forEach((u) => {
+          userToSocketMap.get(u)?.emit("p2Response", state.toBroadcast);
+        });
+
+        state.markAsSent();
+      }
+    })
+
+    socket.on("p2Reject", (req) => {
+      console.log('we were rejected :(');
+      socket.emit("rejected", {});
+    })
   })
-  //   socket.on("submit-share", (req: { cid: string, uid: string, amount: string }) => {
-  //     console.log("submit-share received!");
-  //     const { cid, uid, amount } = req;
-  //     const state = chwaziToStateMap.get(cid);
-  //     if (state === undefined) {
-  //       console.log(`did not start cid ${cid} yet`);
-  //       return;
-  //     }
-  //
-  //     const amountNum = parseFloat(amount);
-  //     const response = state.handleEvent({ ty: "p1Add", name: uid, amount: amountNum });
-  //     console.log(`${req} => ${response}`);
-  //   })
-  //
-  //
-  // });
 };
 
 export const getIo = () => io;

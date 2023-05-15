@@ -25,8 +25,8 @@ const InputChwazi = (props: InputChwaziProps) => {
         }
 
         const float = parseFloat(share.slice(1)).toFixed(2)
-        console.log(float.toString(), "submitting to test socket")
-        socket.on("test", (req: { bill: Array<[string, number]>, counts: Array<[string, number]>}) => {
+        console.log(float.toString(), "submitting to p1Response socket")
+        socket.on("p1Response", (req: { bill: Array<[string, number]>, counts: Array<[string, number]>}) => {
             props.setBill(req.bill);
             navigate("/verify");
         });

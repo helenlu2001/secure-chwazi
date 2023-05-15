@@ -24,6 +24,8 @@ class Phase2 {
     constructor(private readonly participants: Map<string, number>, private readonly keys: KeyPair, private readonly log: TransactionLog) {}
 
     confirm(name: string): Phase3 | Phase2 {
+        console.log("participants", this.participants);
+        console.log("name", name);
         assert.ok(this.participants.has(name));
         this.confirmed.add(name);
 
@@ -168,7 +170,7 @@ export type Response = { ty: "pending" }
 | { ty: "p2Response", choice: string, entry: RawEntry }
 | { ty: "p3Response" }
 | { ty: "rejected" }
-| { err: string }
+| { ty: "err", err: string }
 
 
 export class EventInterpreter {
@@ -236,7 +238,7 @@ export class EventInterpreter {
                     return this.responseToBroadcast;
             }
         } catch (error) {
-            return { err: "Error processing event of type " + ev.ty + ": " + error };
+            return { ty: "err", err: "Error processing event of type " + ev.ty + ": " + error };
         }
 
         return { "ty": "pending" };

@@ -23,6 +23,7 @@ const App = () => {
   const [chwazi, setChwazi] = useState<string>('');
   const [lobby, setLobby] = useState({users: ['jay', 'helen', 'joyce']});
   const [bill, setBill] = useState<Array<[string, number]>>([]);
+  const [chosen, setChosen] = useState<string>("");
 
 
   useEffect(() => {
@@ -46,7 +47,8 @@ const App = () => {
         <Route path="/join" element={<Join setChwazi={setChwazi} uid={userId} setLobby={setLobby}/>} />
         <Route path="/lobby" element={<Lobby code={chwazi} lobby={lobby} setLobby={setLobby}/>} />
         <Route path="/input" element={<InputChwazi uid={userId} cid={chwazi} setBill={setBill}/>} />
-        <Route path="/verify" element={<VerifyBill path="/verify" bills={bill} /> } />
+        <Route path="/verify" element={<VerifyBill cid={chwazi} bills={bill} uid={userId!} setChosen={setChosen}/> } />
+        <Route path="/result" element={<Result chosen={chosen}/>} />
       </Routes>
       {/* // <Homepage path="/" />
 
