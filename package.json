@@ -27,6 +27,7 @@
     "webpack-dev-server": "^4.11.1"
   },
   "dependencies": {
+    "@appliedblockchain/sodium-native-vrf": "^3.3.2",
     "@babel/polyfill": "^7.12.1",
     "@reach/router": "^1.3.4",
     "@react-oauth/google": "^0.6.0",

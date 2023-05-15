@@ -1,0 +1,31 @@
+{
+    "name": "@types/sodium-native",
+    "version": "2.3.5",
+    "description": "TypeScript definitions for sodium-native",
+    "license": "MIT",
+    "contributors": [
+        {
+            "name": "Florian Keller",
+            "url": "https://github.com/ffflorian",
+            "githubUsername": "ffflorian"
+        },
+        {
+            "name": "nshcore",
+            "url": "https://github.com/nshcore",
+            "githubUsername": "nshcore"
+        }
+    ],
+    "main": "",
+    "types": "index.d.ts",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
+        "directory": "types/sodium-native"
+    },
+    "scripts": {},
+    "dependencies": {
+        "@types/node": "*"
+    },
+    "typesPublisherContentHash": "05c95fd6184d5fb193fb3e03dd2a505bc1a286fc5f95a125b76c472f3044d0ed",
+    "typeScriptVersion": "2.8"
+}
