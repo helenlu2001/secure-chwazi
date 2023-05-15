@@ -26,7 +26,12 @@ const vrfInput = (prevCounts: ReadonlyMap<string, number>): Buffer => {
   return Buffer.from(input.toString());
 }
 
-export const proposeTransaction = (txn: Transaction, secretKey: Buffer, log: TransactionLog): RawEntry => {
+type Proposal = {
+  entry: RawEntry,
+  choice: string
+}
+
+export const proposeTransaction = (txn: Transaction, secretKey: Buffer, log: TransactionLog): Proposal => {
   const prevEntry = log.get(log.size - 1);
   const prevTotals = prevEntry?.payments ?? new PaymentTracker(new Map());
 
@@ -36,11 +41,16 @@ export const proposeTransaction = (txn: Transaction, secretKey: Buffer, log: Tra
 
   const payer = determinePayer(txn, prevTotals.totals, proof);
 
-  return {
+  const rawEntry = {
     amount: 0,
     payments: prevTotals.withTransaction(txn.participants, payer),
     participants: txn.participants,
     proof: proof
+  }
+
+  return {
+    entry: rawEntry,
+    choice: payer
   }
 }
 

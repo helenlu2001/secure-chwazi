@@ -1,6 +1,6 @@
 import {RawEntry, TransactionLog} from "./log";
 import * as assert from "assert";
-import {KeyPair} from "./vrf";
+import {KeyPair, Proof} from "./vrf";
 import {proposeTransaction} from "./chwazi";
 
 class Phase1 {
@@ -36,13 +36,24 @@ class Phase2 {
     reject(): Aborted {
         return new Aborted();
     }
+
+    get bill(): ReadonlyMap<string, number> {
+        return this.participants;
+    }
+
+    get txnCounts(): ReadonlyMap<string, number> {
+        return this.log.get(this.log.size - 1)?.payments.counts ?? new Map<string, number>();
+    }
 }
 
 class Phase3 {
     private readonly proposedEntry: RawEntry;
+    private readonly proposedChoice: string;
     private readonly confirmed: Set<string> = new Set<string>();
     constructor(participants: Map<string, number>, private readonly keys: KeyPair, private readonly log: TransactionLog) {
-        this.proposedEntry = proposeTransaction({ participants }, keys.secretKey, log);
+        const { entry, choice } = proposeTransaction({ participants }, keys.secretKey, log);
+        this.proposedEntry = entry;
+        this.proposedChoice = choice;
     }
 
     confirm(name: string): Accepted | Phase3 {
@@ -60,6 +71,14 @@ class Phase3 {
     reject(): Aborted {
         return new Aborted();
     }
+
+    get choice(): string {
+        return this.proposedChoice;
+    }
+
+    get entry(): RawEntry {
+        return this.proposedEntry;
+    }
 }
 
 class Accepted {
@@ -68,7 +87,7 @@ class Accepted {
 
 class Aborted {}
 
-export class StateMachine {
+class StateMachine {
     private state: Phase1 | Phase2 | Phase3 | Accepted | Aborted;
     constructor(keys: KeyPair, log: TransactionLog) {
         this.state = new Phase1(keys, log);
@@ -139,5 +158,82 @@ export class StateMachine {
     get inProgress(): boolean {
         return !this.accepted && !this.aborted;
     }
+
+    get inner(): Phase1 | Phase2 | Phase3 | Accepted | Aborted {
+        return this.state;
+    }
 }
 
+export type Event = { ty: "p1Add", name: string, amount: number }
+| { ty: "p1Finalize" }
+| { ty: "p2Confirm", name: string }
+| { ty: "p2Reject" }
+| { ty: "p3Confirm", name: string }
+| { ty: "p3Reject" }
+
+export type Response = { ty: "pending" }
+| { ty: "p1Response", bill: ReadonlyMap<string, number>, counts: ReadonlyMap<string, number> }
+| { ty: "p2Response", choice: string, entry: RawEntry }
+| { ty: "p3Response" }
+| { ty: "rejected" }
+| { err: string }
+
+
+export class EventInterpreter {
+    private readonly sm: StateMachine;
+    constructor(keys: KeyPair, log: TransactionLog) {
+        this.sm = new StateMachine(keys, log);
+    }
+
+    handleEvent(ev: Event): Response {
+        try {
+            let changed;
+            switch (ev.ty) {
+                case "p1Finalize":
+                    changed = this.sm.finalize();
+                    assert.ok(changed);
+                    assert.ok(this.sm.inner instanceof Phase2);
+                    const sm = this.sm.inner;
+                    return {
+                        ty: "p1Response",
+                        bill: sm.bill,
+                        counts: sm.txnCounts
+                    };
+                case "p1Add":
+                    changed = this.sm.addParticipant(ev.name, ev.amount);
+                    assert.ok(!changed); // Should never change on addParticipant.
+                    break;
+                case "p2Confirm":
+                    changed = this.sm.p2Confirm(ev.name);
+                    if (changed) {
+                        assert.ok(this.sm.inner instanceof Phase3);
+                        const sm = this.sm.inner;
+                        return {
+                            ty: "p2Response",
+                            choice: sm.choice,
+                            entry: sm.entry
+                        }
+                    }
+                    break;
+                case "p2Reject":
+                    changed = this.sm.p2Reject();
+                    assert.ok(this.sm.inner instanceof Aborted);
+                    return { ty: "rejected" };
+                case "p3Confirm":
+                    changed = this.sm.p3Confirm(ev.name);
+                    assert.ok(changed);
+                    assert.ok(this.sm.inner instanceof Accepted);
+                    return { ty: "p3Response" };
+                case "p3Reject":
+                    changed = this.sm.p3Reject();
+                    assert.ok(this.sm.inner instanceof Aborted);
+                    return { ty: "rejected" };
+            }
+        } catch (error) {
+            return { err: "Error processing event of type " + ev.ty + ": " + error };
+        }
+
+        return { "ty": "pending" }
+    }
+
+}

@@ -105,7 +105,7 @@ router.post("/txn/phase2", (req, res) => {
     return;
   }
 
-  const entry = proposeTransaction({ participants }, keys.secretKey, log);
+  const { entry, choice } = proposeTransaction({ participants }, keys.secretKey, log);
 
   const response: Phase2Response = { entry };
   res.send(response);
