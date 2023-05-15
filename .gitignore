@@ -1,5 +1,4 @@
-client/dist/bundle.js
-client/dist/bundle.js.map
-client/dist/bundle.js.LICENSE.txt
+dist/
+client/dist/
 node_modules/
 .env
