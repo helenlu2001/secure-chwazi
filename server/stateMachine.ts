@@ -74,52 +74,58 @@ export class StateMachine {
         this.state = new Phase1(keys, log);
     }
 
-    addParticipant(name: string, amount: number): void {
+    addParticipant(name: string, amount: number): boolean {
         if (!(this.state instanceof Phase1)) {
-            throw new Error("Wrong phase for addParticipant!");
+            throw new Error("Wrong phase for addParticipant, must be in phase 1!");
         }
 
         this.state = this.state.addParticipant(name, amount);
+        return false;
     }
 
-    finalize(): void {
+    finalize(): boolean {
         if (!(this.state instanceof Phase1)) {
-            throw new Error("Wrong phase for finalize!");
+            throw new Error("Wrong phase for finalize, must be in phase 1!");
         }
 
         this.state = this.state.finalize();
+        return true;
     }
 
-    p2Confirm(name: string): void {
+    p2Confirm(name: string): boolean {
         if (!(this.state instanceof Phase2)) {
-            throw new Error("Wrong phase for p2Confirm!");
+            throw new Error("Wrong phase for p2Confirm, must be in phase 2!");
         }
 
         this.state = this.state.confirm(name);
+        return this.state instanceof Phase3;
     }
 
-    p2Reject(): void {
+    p2Reject(): boolean {
         if (!(this.state instanceof Phase2)) {
-            throw new Error("Wrong phase for p2Reject!");
+            throw new Error("Wrong phase for p2Reject, must be in phase 2!");
         }
 
         this.state = this.state.reject();
+        return true;
     }
 
-    p3Confirm(name: string): void {
+    p3Confirm(name: string): boolean {
         if (!(this.state instanceof Phase3)) {
-            throw new Error("Wrong phase for p3Confirm!");
+            throw new Error("Wrong phase for p3Confirm, must be in phase 3!");
         }
 
         this.state = this.state.confirm(name);
+        return this.state instanceof Accepted;
     }
 
-    p3Reject(): void {
+    p3Reject(): boolean {
         if (!(this.state instanceof Phase3)) {
-            throw new Error("Wrong phase for p3Reject!");
+            throw new Error("Wrong phase for p3Reject, must be in phase 3!");
         }
 
         this.state = this.state.reject();
+        return true;
     }
 
     get aborted(): boolean {
