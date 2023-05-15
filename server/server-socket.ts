@@ -1,11 +1,19 @@
 import type http from "http";
 import { Server, Socket } from "socket.io";
 import User from "../shared/User";
+import {EventInterpreter} from "./stateMachine";
+import {generateKeyPair} from "./vrf";
+import {TransactionLog} from "./log";
 let io: Server;
 
 const userToSocketMap: Map<string, Socket> = new Map<string, Socket>(); // maps user ID to socket object
 const chwaziToUserMap: Map<string, string[]> = new Map<string, string[]>(); // maps user ID to chwazi ID
+const userToChwaziMap: Map<string, string> = new Map<string, string>; // maps chwazi ID to user ID
 const socketToUserMap: Map<string, User> = new Map<string, User>(); // maps socket ID to user object
+const chwaziToStateMap: Map<string, EventInterpreter> = new Map<string, EventInterpreter>();
+
+const keys = generateKeyPair();
+const log = new TransactionLog();
 
 export const getSocketFromUserID = (userid: string) => userToSocketMap.get(userid);
 export const getUserFromSocketID = (socketid: string) => socketToUserMap.get(socketid);
@@ -38,14 +46,15 @@ export const init = (server: http.Server): void => {
       if (user !== undefined) removeUser(user, socket);
     });
     socket.on("create", (req: {cid: string, uid: string}) =>{
-      userToSocketMap[req.uid] = socket
+      userToSocketMap.set(req.uid, socket)
       
       let chwazi_id = ''
       for(let i = 0; i < 6; i++) {
         chwazi_id += Math.floor(Math.random() * 10).toString();
       }
 
-      chwaziToUserMap.set(chwazi_id, [req.uid])
+      chwaziToUserMap.set(chwazi_id, [req.uid]);
+      userToChwaziMap.set(req.uid, chwazi_id);
       console.log("hello, creation request", req)
       console.log("generated chwazi id is", chwazi_id)
 
@@ -53,14 +62,15 @@ export const init = (server: http.Server): void => {
     })
 
     socket.on("join", (req) => {
-      userToSocketMap[req.uid] = socket
+      userToSocketMap.set(req.uid, socket)
 
       console.log('chwaziToUserMap', chwaziToUserMap)
       let valid = chwaziToUserMap.has(req.cid)
       if(valid) {
-        chwaziToUserMap.get(req.cid)?.push(req.uid) 
+        chwaziToUserMap.get(req.cid)?.push(req.uid);
+        userToChwaziMap.set(req.uid, req.cid);
         chwaziToUserMap.get(req.cid)?.forEach((uid) => {
-          userToSocketMap[uid].emit('lobby data', {lobby: {users: chwaziToUserMap.get(req.cid)}})
+          userToSocketMap.get(uid)?.emit('lobby data', {lobby: {users: chwaziToUserMap.get(req.cid)}})
         })
       }
 
@@ -71,12 +81,54 @@ export const init = (server: http.Server): void => {
 
     socket.on("start", (req) => {
       chwaziToUserMap.get(req.cid)?.forEach((uid) => {
-        userToSocketMap[uid].emit('chwazi started')
+        userToSocketMap.get(uid)?.emit('chwazi started')
       })
+
+      const allUsers = new Set(chwaziToUserMap.get(req.cid));
+
+
+      chwaziToStateMap.set(req.cid, new EventInterpreter(keys, log, allUsers));
     })
 
-    
-  });
+    socket.on("submit-share", (req) => {
+      console.log("submit-share received!");
+      const { cid, uid, amount } = req;
+      const state = chwaziToStateMap.get(cid);
+      if (state === undefined) {
+        console.log(`did not start cid ${cid} yet`);
+        return;
+      }
+
+      const amountNum = parseFloat(amount);
+      const response = state.handleEvent({ ty: "p1Add", name: uid, amount: amountNum });
+      console.log(`${req} => ${response}`);
+
+      if (state.toBroadcast !== null) {
+        console.log("broadcasting,", response);
+        chwaziToUserMap.get(req.cid)?.forEach((u) => {
+          userToSocketMap.get(u)?.emit("test", response);
+        });
+
+        state.markAsSent();
+      }
+    });
+  })
+  //   socket.on("submit-share", (req: { cid: string, uid: string, amount: string }) => {
+  //     console.log("submit-share received!");
+  //     const { cid, uid, amount } = req;
+  //     const state = chwaziToStateMap.get(cid);
+  //     if (state === undefined) {
+  //       console.log(`did not start cid ${cid} yet`);
+  //       return;
+  //     }
+  //
+  //     const amountNum = parseFloat(amount);
+  //     const response = state.handleEvent({ ty: "p1Add", name: uid, amount: amountNum });
+  //     console.log(`${req} => ${response}`);
+  //   })
+  //
+  //
+  // });
 };
 
 export const getIo = () => io;

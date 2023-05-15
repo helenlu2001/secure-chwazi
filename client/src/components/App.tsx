@@ -22,6 +22,7 @@ const App = () => {
   const [userId, setUserId] = useState<string | undefined>(undefined);
   const [chwazi, setChwazi] = useState<string>('');
   const [lobby, setLobby] = useState({users: ['jay', 'helen', 'joyce']});
+  const [bill, setBill] = useState<Array<[string, number]>>([]);
 
 
   useEffect(() => {
@@ -44,10 +45,11 @@ const App = () => {
         <Route path="/" element={<Homepage />} />
         <Route path="/join" element={<Join setChwazi={setChwazi} uid={userId} setLobby={setLobby}/>} />
         <Route path="/lobby" element={<Lobby code={chwazi} lobby={lobby} setLobby={setLobby}/>} />
-        <Route path="/input" element={<InputChwazi />} />
+        <Route path="/input" element={<InputChwazi uid={userId} cid={chwazi} setBill={setBill}/>} />
+        <Route path="/verify" element={<VerifyBill path="/verify" bills={bill} /> } />
       </Routes>
       {/* // <Homepage path="/" />
-      // <VerifyBill path="/verify" bills={[{username: 'test1', amount: 10}, {username: 'test2', amount: 15}]}/>
+
       // <Result path="/result" chosen={"helen"}/>
       // <NotFound default={true} /> */}
     </Router>

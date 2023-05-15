@@ -4,16 +4,18 @@ import {KeyPair, Proof} from "./vrf";
 import {proposeTransaction} from "./chwazi";
 
 class Phase1 {
-    private readonly participants: Map<string, number> = new Map<string, number>();
-    constructor(private readonly keys: KeyPair, private readonly log: TransactionLog) {}
+    private participants: Map<string, number> = new Map<string, number>([]);
+    constructor(private readonly keys: KeyPair, private readonly log: TransactionLog, private readonly waitingOn: Set<string>) {}
 
-    addParticipant(name: string, amount: number): Phase1 {
-        this.participants.set(name, amount);
+    addParticipant(name: string, amount: number): Phase1 | Phase2 {
+        this.waitingOn.delete(name);
+        this.participants = this.participants.set(name, amount);
+
+        if (this.waitingOn.size === 0) {
+            return new Phase2(this.participants, this.keys, this.log);
+        }
+
         return this;
-    }
-
-    finalize(): Phase2 {
-        return new Phase2(this.participants, this.keys, this.log);
     }
 }
 
@@ -89,8 +91,8 @@ class Aborted {}
 
 class StateMachine {
     private state: Phase1 | Phase2 | Phase3 | Accepted | Aborted;
-    constructor(keys: KeyPair, log: TransactionLog) {
-        this.state = new Phase1(keys, log);
+    constructor(keys: KeyPair, log: TransactionLog, allUsers: Set<string>) {
+        this.state = new Phase1(keys, log, allUsers);
     }
 
     addParticipant(name: string, amount: number): boolean {
@@ -99,16 +101,7 @@ class StateMachine {
         }
 
         this.state = this.state.addParticipant(name, amount);
-        return false;
-    }
-
-    finalize(): boolean {
-        if (!(this.state instanceof Phase1)) {
-            throw new Error("Wrong phase for finalize, must be in phase 1!");
-        }
-
-        this.state = this.state.finalize();
-        return true;
+        return this.state instanceof Phase2;
     }
 
     p2Confirm(name: string): boolean {
@@ -165,14 +158,13 @@ class StateMachine {
 }
 
 export type Event = { ty: "p1Add", name: string, amount: number }
-| { ty: "p1Finalize" }
 | { ty: "p2Confirm", name: string }
 | { ty: "p2Reject" }
 | { ty: "p3Confirm", name: string }
 | { ty: "p3Reject" }
 
 export type Response = { ty: "pending" }
-| { ty: "p1Response", bill: ReadonlyMap<string, number>, counts: ReadonlyMap<string, number> }
+| { ty: "p1Response", bill: Array<[string, number]>, counts: Array<[string, number]> }
 | { ty: "p2Response", choice: string, entry: RawEntry }
 | { ty: "p3Response" }
 | { ty: "rejected" }
@@ -182,8 +174,8 @@ export type Response = { ty: "pending" }
 export class EventInterpreter {
     private readonly sm: StateMachine;
     private responseToBroadcast: Response | null = null;
-    constructor(keys: KeyPair, log: TransactionLog) {
-        this.sm = new StateMachine(keys, log);
+    constructor(keys: KeyPair, log: TransactionLog, allUsers: Set<string>) {
+        this.sm = new StateMachine(keys, log, allUsers);
     }
 
     /**
@@ -197,21 +189,20 @@ export class EventInterpreter {
         try {
             let changed;
             switch (ev.ty) {
-                case "p1Finalize":
-                    changed = this.sm.finalize();
-                    assert.ok(changed);
-                    assert.ok(this.sm.inner instanceof Phase2);
-                    const sm = this.sm.inner;
-                    this.responseToBroadcast = {
-                        ty: "p1Response",
-                        bill: sm.bill,
-                        counts: sm.txnCounts
-                    };
-
-                    return this.responseToBroadcast;
                 case "p1Add":
+                    console.log("in p1Add case!");
                     changed = this.sm.addParticipant(ev.name, ev.amount);
-                    assert.ok(!changed); // Should never change on addParticipant.
+                    if (changed) {
+                        assert.ok(this.sm.inner instanceof Phase2);
+                        const sm = this.sm.inner;
+                        this.responseToBroadcast = {
+                            ty: "p1Response",
+                            bill: Array.from(sm.bill),
+                            counts: Array.from(sm.txnCounts)
+                        };
+
+                        return this.responseToBroadcast;
+                    }
                     break;
                 case "p2Confirm":
                     changed = this.sm.p2Confirm(ev.name);
