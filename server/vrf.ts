@@ -33,13 +33,6 @@ export const prove = (sk: Buffer, message: Buffer): Proof => {
   }
 }
 
-// This is used for observing the output of a proof, but verifying it provides the same thing.
-export const hashFromProof = (proof: Proof): Buffer => {
-  const outputHash = Buffer.from("0".repeat(crypto_vrf_OUTPUTBYTES));
-  crypto_vrf_proof_to_hash(outputHash, proof.proof);
-  return outputHash;
-}
-
 export const verify = (proof: Proof): Buffer | null => {
   const output = Buffer.from("0".repeat(crypto_vrf_OUTPUTBYTES));
   try {

@@ -67,7 +67,7 @@ router.post("/log/get/:index", async (req, res) => {
   }
   const index = parseInt(indexStr);
 
-  if (index < log.size()) {
+  if (index < log.size) {
     res.status(400).send( {msg: "index too large" });
     return;
   }
@@ -93,7 +93,7 @@ router.post("/txn/start", (req, res) => {
   }
 
   const entry = executeTransaction({ participants }, keys.secretKey, log);
-  const index = log.size();
+  const index = log.size;
   log.add(entry);
 
   const response: StartTransactionResponse = { index, entry };

@@ -2,43 +2,50 @@ import sodium, { crypto_generichash } from "@appliedblockchain/sodium-native-vrf
 import * as assert from "assert";
 import { Proof } from "./vrf";
 
-export class PaymentDiffMap {
-  private readonly users: Map<string, number>;
-  constructor(users: Map<string, number>) {
-    // no rep exposure :p
-    const newUsers = new Map<string, number>;
-    users.forEach((n, p) => {
-      newUsers.set(p, n);
-    })
+export type Totals = {
+  // expected amount to pay
+  expected: number,
+  // actual amount paid
+  actual: number
+}
 
-    this.users = newUsers;
+export class PaymentDiffMap {
+  private readonly map: Map<string, Totals>;
+  constructor(map: ReadonlyMap<string, Totals>) {
+    // no rep exposure :p
+    const newMap = new Map<string, Totals>();
+    map.forEach((v, p) => newMap.set(p, v));
+    this.map = newMap;
   }
 
   withTransaction(participants: Map<string, number>, payer: string): PaymentDiffMap {
     assert.ok(participants.has(payer));
-
-    const newMap = new PaymentDiffMap(this.users);
-
-    participants.forEach((n, p) => {
-      if (!newMap.users.has(p)) { newMap.users.set(p, -n) }
-    });
 
     let total = 0;
     participants.forEach((x) => {
       total += x;
     });
 
-    const oldPayerDiff = newMap.users.get(payer) ?? 0;
-    newMap.users.set(payer, oldPayerDiff + total);
+    const newMap = new PaymentDiffMap(this.map);
+    participants.forEach((x, p) => {
+      let oldV = newMap.map.get(p) ?? { expected: 0, actual: 0};
+
+      const newExpected = oldV.expected + x;
+      let newActual;
+      if (p === payer) {
+        newActual = oldV.actual + total;
+      } else {
+        newActual = oldV.actual;
+      }
+
+      newMap.map.set(p, { expected: newExpected, actual: newActual });
+    })
 
     return newMap;
   }
 
-  inner(): Map<string, number> {
-    const newUsers = new Map<string, number>();
-    this.users.forEach((n, p) => newUsers.set(p, n));
-
-    return newUsers;
+  get totals(): ReadonlyMap<string, Totals> {
+    return this.map;
   }
 }
 
@@ -78,15 +85,15 @@ export class TransactionLog {
   private readonly log: Array<Entry> = [];
   constructor() {}
   add(e: RawEntry): void {
-    const prevLogEntry = this.get(this.size() - 1);
+    const prevLogEntry = this.get(this.size - 1);
     this.log.push(makeEntry(e, prevLogEntry));
   }
 
   get(i: number): Entry | null {
-    return 0 <= i && i < this.size() ? this.log[i] : null;
+    return 0 <= i && i < this.size ? this.log[i] : null;
   }
 
-  size(): number {
+  get size(): number {
     return this.log.length;
   }
 }

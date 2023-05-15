@@ -8,7 +8,7 @@
  *  agree, and checking the proof. Further, a malicious server can be detected by comparing hashes
  *  for a given index.
  */
-import { Entry, makeEntry, PaymentDiffMap, RawEntry, TransactionLog } from "./log";
+import { Entry, makeEntry, PaymentDiffMap, RawEntry, Totals, TransactionLog } from "./log";
 import { KeyPair, Proof, prove } from "./vrf";
 import * as assert from "assert";
 
@@ -21,10 +21,10 @@ export const executeTransaction = (txn: Transaction, secretKey: Buffer, log: Tra
   const inputBuf = Buffer.from(input.toString());
 
   const proof = prove(secretKey, inputBuf);
-  const payer = determinePayer(txn, proof);
-
-  const prevEntry = log.get(log.size() - 1);
+  const prevEntry = log.get(log.size - 1);
   const prevDiffs = prevEntry?.diffs ?? new PaymentDiffMap(new Map());
+
+  const payer = determinePayer(txn, prevDiffs.totals, proof);
 
   const rawEntry: RawEntry = {
     amount: 0,
@@ -36,73 +36,42 @@ export const executeTransaction = (txn: Transaction, secretKey: Buffer, log: Tra
   return makeEntry(rawEntry, prevEntry);
 }
 
-const diffMultiplier = 1.5;
-const diffAdder = 1;
+const txnWeightMul = 0.5;
+const historicalWeightMul = 1 / txnWeightMul;
 
-const determinePayer = (txn: Transaction, proof: Proof): string => {
-  assert.ok(txn.participants.size > 0);
+const determinePayer = (txn: Transaction, totals: ReadonlyMap<string, Totals>, proof: Proof): string => {
+  // First, find someone's weight across all transactions. Then do the same for just this transaction.
+  // Aggregate them with a weighted geometric mean.
 
-  let min = 0;
-  let max = 0;
-  txn.participants.forEach((n) => {
-    if (n < min) {
-      min = n;
-    }
-
-    if (n > max) {
-      max = n;
-    }
-  });
-
-  const absDiff = max - min;
-  const shiftedDiff = absDiff * diffMultiplier + diffAdder;
-
-  const scaledMap = new Map<string, number>();
+  let total = 0;
   txn.participants.forEach((n, p) => {
-    scaledMap.set(p, shiftedDiff * n);
+    total += n;
   });
 
-  let scaledTotal = 0;
-  scaledMap.forEach((n) => {
-    scaledTotal += n;
+  const weights = new Map<string, number>();
+  txn.participants.forEach((n, p) => {
+    const txnWeight = n / total;
+    const { expected, actual } = totals.get(p) ?? { expected: 0, actual: 0 };
+    const historicalWeight = (actual === 0) ? 1 : expected / actual;
+
+    const weight = Math.sqrt((txnWeightMul * txnWeight) * (historicalWeightMul * historicalWeight));
+    weights.set(p, weight);
   });
 
-  const normalizedMap = new Map<string, number>();
-  scaledMap.forEach((n, p) => {
-    normalizedMap.set(p, n / scaledTotal);
+  let totalWeight = 0;
+  weights.forEach((x) => {
+    totalWeight += x;
   });
 
-  // Check some simple invariants on the normalized map: each element is between 0 and 1, and it
-  // sums to 1 (w/ some allowance for floating-point error).
-  normalizedMap.forEach((n) => assert.ok(0 < n && n < 1));
-  const normalizedTotal = Array.from(normalizedMap.values()).reduce(
-    (prev, curr) => prev + curr
-  );
-  assert.ok(Math.abs(normalizedTotal - 1) <= 1E-4);
-
-  // Grab the lowest 8 bits of the proof output's hash and interpret it as the smallest value.
-  const s = proof.proof.readUInt32LE(6);
-  const normalizedS = s / Math.pow(2, 32);
-
-  // Now pick someone in sorted order.
-  const ordered = Array.from(normalizedMap.entries()).sort(([a, aNum], [b, bNum]) => {
-    if (a < b) {
-      return -1;
-    } else if (a > b) {
-      return 1;
-    } else {
-      return 0;
-    }
+  // Normalize the weights now.
+  const normalizedWeights = new Map<string, number>();
+  weights.forEach((x, p) => {
+    normalizedWeights.set(p, x / totalWeight);
   });
 
-  let runningSum = 0;
-  for (const [p, n] of ordered) {
-    if (runningSum < normalizedS && normalizedS <= runningSum + n) {
-      return p;
-    }
+  // Now normalizedWeights should sum to 1 so choose whatever region you end up in.
 
-    runningSum += n;
-  }
+  // Turn the proof into a number from 0 to 1.
 
-  assert.fail("shouldn't get here :(")
+  throw new Error("unimplemented!")
 }
