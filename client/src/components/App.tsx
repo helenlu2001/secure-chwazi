@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { Router } from "@reach/router";
 import jwt_decode from "jwt-decode";
 import { CredentialResponse } from "@react-oauth/google";
 
@@ -11,6 +10,8 @@ import Lobby from "./pages/Lobby"
 import InputChwazi from "./pages/InputChwazi"
 import VerifyBill from "./pages/VerifyBill"
 import Result from "./pages/Result"
+
+import { BrowserRouter as Router, Routes, Route} from 'react-router-dom';
 
 
 import { socket } from "../client-socket";
@@ -24,30 +25,31 @@ const App = () => {
 
 
   useEffect(() => {
-    get("/api/whoami")
-      .then((user: User) => {
-        if (user._id) {
-          // TRhey are registed in the database and currently logged in.
-          setUserId(user._id);
-        }
-      })
-      .then(() =>
-        socket.on("connect", () => {
-          post("/api/initsocket", { socketid: socket.id });
-        })
-      );
+    let id = ''
+    for(let i = 0; i < 6; i++) {
+      id += Math.floor(Math.random() * 10).toString();
+    }
+    setUserId(id);
+
+
+    socket.on("connect", () => {
+      post("/api/initsocket", { socketid: socket.id });
+    })
   }, []);
 
 
   return (
     <Router>
-      <Homepage path="/" />
-      <Join path="/join" setChwazi={setChwazi}/>
-      <Lobby path="/lobby" code={chwazi} lobby={lobby} />
-      <InputChwazi path="/input" />
-      <VerifyBill path="/verify" bills={[{username: 'test1', amount: 10}, {username: 'test2', amount: 15}]}/>
-      <Result path="/result" chosen={"helen"}/>
-      <NotFound default={true} />
+      <Routes>
+        <Route path="/" element={<Homepage />} />
+        <Route path="/join" element={<Join setChwazi={setChwazi} uid={userId} setLobby={setLobby}/>} />
+        <Route path="/lobby" element={<Lobby code={chwazi} lobby={lobby} setLobby={setLobby}/>} />
+        <Route path="/input" element={<InputChwazi />} />
+      </Routes>
+      {/* // <Homepage path="/" />
+      // <VerifyBill path="/verify" bills={[{username: 'test1', amount: 10}, {username: 'test2', amount: 15}]}/>
+      // <Result path="/result" chosen={"helen"}/>
+      // <NotFound default={true} /> */}
     </Router>
   );
 };
