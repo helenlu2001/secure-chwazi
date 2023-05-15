@@ -1,5 +1,6 @@
 import React from "react";
 import Entry from "../modules/Entry"
+import "./VerifyBill.css"
 
 import { RouteComponentProps } from "@reach/router";
 
@@ -13,6 +14,14 @@ const VerifyBill = (props: VerifyBillProps) => {
         </div>
         <div className="VerifyBill-bill">
             {props.bills.map((bill) => (<Entry username={bill.username} amount={bill.amount}/>))}
+        </div>
+        <div className="VerifyBill-buttonContainer">
+          <div className="VerifyBill-button">
+            ACCEPT
+          </div>
+          <div className="VerifyBill-button">
+            REJECT
+          </div>
         </div>
     </div>
   );

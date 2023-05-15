@@ -1,0 +1,46 @@
+.VerifyBill-body {
+    background-color: var(--light-pink);
+    height: 100vh;
+    padding: 0px 450px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.VerifyBill-title {
+    margin-top: 20vh;
+    margin-bottom: 2vh;
+
+    text-align: center;
+
+    font-family: 'Darumadrop One', cursive;
+    font-size: 64px;
+    color: var(--med-blue);
+}
+
+.VerifyBill-bill {
+    width: 100%;
+}
+
+/* .VerifyBill-buttonContainer {
+    display: flex;
+    justify-content: space-around;
+} */
+
+.VerifyBill-button {
+    width: 250px;
+    height: 28px;
+    padding: 8px;
+    border: 2px solid var(--med-pink);
+
+    font-family: 'Braah One', sans-serif;
+    font-size: 28px;   
+    color: var(--med-pink);
+
+    text-align: center;
+}
+
+.VerifyBill-button + .VerifyBill-button {
+    margin-top: 16px;
+}

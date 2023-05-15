@@ -45,7 +45,7 @@ const App = () => {
       <Join path="/join" setChwazi={setChwazi}/>
       <Lobby path="/lobby" code={chwazi} lobby={lobby} />
       <InputChwazi path="/input" />
-      <VerifyBill path="/verify" bills={[{username: 'test', amount: 10}]}/>
+      <VerifyBill path="/verify" bills={[{username: 'test1', amount: 10}, {username: 'test2', amount: 15}]}/>
       <Result path="/result" chosen={"helen"}/>
       <NotFound default={true} />
     </Router>

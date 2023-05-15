@@ -1,0 +1,10 @@
+.Entry-container {
+    display: flex;
+    justify-content: space-between;
+        
+    font-family: 'Braah One', sans-serif;
+    font-size: 64px;
+    color: var(--med-yellow);
+
+}
+
