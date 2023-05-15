@@ -1,3 +1,6 @@
+@import url('https://fonts.googleapis.com/css2?family=Darumadrop+One&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Braah+One&display=swap');
+
 /**
 * Welcome to your ✨𝔲𝔱𝔦𝔩𝔦𝔱𝔶 𝔰𝔱𝔶𝔩𝔢𝔰✨!
 * This file includes utility classes that are super simple
@@ -25,6 +28,14 @@
   --grey: #f7f7f7;
   --white: #fff;
 
+  --med-blue: #4a8beb;
+  --light-blue: #9ed2f9;
+  --med-yellow: #ffe354;
+  --light-yellow: #fdfd96;
+  --med-pink: #e270a4;
+  --light-pink: #ffbbc8;
+  --background: #ffe6ea;
+
   --xs: 4px;
   --s: 8px;
   --m: 16px;
@@ -36,6 +47,7 @@ body {
   padding: 0;
   font-family: "Roboto", sans-serif;
   font-weight: 300;
+  height: 100vh;
 }
 
 form {

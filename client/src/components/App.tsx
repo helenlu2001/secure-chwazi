@@ -5,7 +5,7 @@ import { CredentialResponse } from "@react-oauth/google";
 
 import { get, post } from "../utilities";
 import NotFound from "./pages/NotFound";
-import Skeleton from "./pages/Skeleton";
+import Homepage from "./pages/Homepage";
 import { socket } from "../client-socket";
 import User from "../../../shared/User";
 import "../utilities.css";
@@ -28,26 +28,10 @@ const App = () => {
       );
   }, []);
 
-  const handleLogin = (credentialResponse: CredentialResponse) => {
-    const userToken = credentialResponse.credential;
-    const decodedCredential = jwt_decode(userToken as string) as { name: string; email: string };
-    console.log(`Logged in as ${decodedCredential.name}`);
-    post("/api/login", { token: userToken }).then((user) => {
-      setUserId(user._id);
-      post("/api/initsocket", { socketid: socket.id });
-    });
-  };
 
-  const handleLogout = () => {
-    setUserId(undefined);
-    post("/api/logout");
-  };
-
-  // NOTE:
-  // All the pages need to have the props extended via RouteComponentProps for @reach/router to work properly. Please use the Skeleton as an example.
   return (
     <Router>
-      <Skeleton path="/" handleLogin={handleLogin} handleLogout={handleLogout} userId={userId} />
+      <Homepage path="/" />
       <NotFound default={true} />
     </Router>
   );
