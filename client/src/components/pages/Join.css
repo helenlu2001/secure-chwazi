@@ -1,0 +1,50 @@
+.Join-body {
+    background-color: var(--background);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+.Join-input {
+    margin: 16px;
+    padding: 8px;
+    width: 250px;
+    border: none;
+
+    text-align: center;
+    vertical-align: middle;
+
+    font-family: 'Braah One', sans-serif;
+    font-size: 28px;
+    color: var(--med-pink)
+}
+
+.Join-input:focus {
+    outline: none;
+}
+
+.Join-button {
+    width: 250px;
+    height: 28px;
+    padding: 8px;
+    border: 2px solid var(--med-pink);
+
+    font-family: 'Braah One', sans-serif;
+    font-size: 28px;   
+    color: var(--med-pink);
+
+    text-align: center;
+}
+
+.Join-button + .Join-button {
+    margin-top: 16px;
+}
+
+.Join-error {
+    margin-top: 16px;
+    
+    font-family: 'Braah One', sans-serif;
+    font-size: 20px;
+    color: var(--med-pink)
+}

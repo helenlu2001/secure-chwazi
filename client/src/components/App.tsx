@@ -6,12 +6,15 @@ import { CredentialResponse } from "@react-oauth/google";
 import { get, post } from "../utilities";
 import NotFound from "./pages/NotFound";
 import Homepage from "./pages/Homepage";
+import Join from "./pages/Join"
+
 import { socket } from "../client-socket";
 import User from "../../../shared/User";
 import "../utilities.css";
 
 const App = () => {
   const [userId, setUserId] = useState<string | undefined>(undefined);
+  const [chwazi, setChwazi] = useState<string>('');
 
   useEffect(() => {
     get("/api/whoami")
@@ -32,6 +35,7 @@ const App = () => {
   return (
     <Router>
       <Homepage path="/" />
+      <Join path="/join" setChwazi={setChwazi}/>
       <NotFound default={true} />
     </Router>
   );
