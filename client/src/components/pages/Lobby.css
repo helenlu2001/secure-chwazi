@@ -1,0 +1,38 @@
+.Lobby-body {
+    background-color: var(--light-pink);
+    
+    height: 100vh;
+    padding: 16vh 20vw;
+
+}
+
+.Lobby-heading {
+    font-family: 'Darumadrop One', cursive;
+    font-size: 40px;
+
+}
+
+.Lobby-code { 
+    font-family: 'Braah One', sans-serif;
+    font-size: 128px;
+}
+
+.Lobby-flex {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+}
+
+.Lobby-people {
+    display: grid;
+    width: 100%;
+    min-height: 200px;
+    grid-template-columns: 25% 25% 25% 25%;
+    text-align: center;
+}
+
+.Lobby-person {
+    font-family: 'Darumadrop One', cursive;
+    font-size: 36px;
+}
