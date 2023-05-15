@@ -6,10 +6,12 @@ export type Totals = {
   // expected amount to pay
   expected: number,
   // actual amount paid
-  actual: number
+  actual: number,
+  // number of txns participated in
+  count: number,
 }
 
-export class PaymentDiffMap {
+export class PaymentTracker {
   private readonly map: Map<string, Totals>;
   constructor(map: ReadonlyMap<string, Totals>) {
     // no rep exposure :p
@@ -18,7 +20,7 @@ export class PaymentDiffMap {
     this.map = newMap;
   }
 
-  withTransaction(participants: Map<string, number>, payer: string): PaymentDiffMap {
+  withTransaction(participants: Map<string, number>, payer: string): PaymentTracker {
     assert.ok(participants.has(payer));
 
     let total = 0;
@@ -26,9 +28,9 @@ export class PaymentDiffMap {
       total += x;
     });
 
-    const newMap = new PaymentDiffMap(this.map);
+    const newMap = new PaymentTracker(this.map);
     participants.forEach((x, p) => {
-      let oldV = newMap.map.get(p) ?? { expected: 0, actual: 0};
+      let oldV = newMap.map.get(p) ?? { expected: 0, actual: 0, count: 0};
 
       const newExpected = oldV.expected + x;
       let newActual;
@@ -38,7 +40,8 @@ export class PaymentDiffMap {
         newActual = oldV.actual;
       }
 
-      newMap.map.set(p, { expected: newExpected, actual: newActual });
+      const isPayer = (p === payer) ? 1 : 0;
+      newMap.map.set(p, { expected: newExpected, actual: newActual, count: oldV.count + isPayer});
     })
 
     return newMap;
@@ -47,13 +50,18 @@ export class PaymentDiffMap {
   get totals(): ReadonlyMap<string, Totals> {
     return this.map;
   }
+
+  get counts(): ReadonlyMap<string, number> {
+    const m = new Map<string, number>();
+    this.map.forEach((v, p) => {m.set(p, v.count);});
+    return m;
+  }
 }
 
 export type RawEntry = Omit<Entry, "hash">
 export interface Entry {
-  diffs: PaymentDiffMap
+  payments: PaymentTracker
   participants: Map<string, number>,
-  counts: Map<string, number>,
   amount: number,
   proof: Proof,
   hash: Buffer

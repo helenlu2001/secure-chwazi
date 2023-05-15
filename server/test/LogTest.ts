@@ -1,4 +1,4 @@
-import { initialHash, PaymentDiffMap, RawEntry, Totals, TransactionLog } from "../log";
+import { initialHash, PaymentTracker, RawEntry, Totals, TransactionLog } from "../log";
 import crypto from "crypto";
 import * as sodium from "@appliedblockchain/sodium-native-vrf";
 import * as assert from "assert";
@@ -48,7 +48,7 @@ const randomRawEntry = (): RawEntry => {
     amount: crypto.randomInt(1000),
     participants: participants,
     proof: proof,
-    diffs: new PaymentDiffMap(totals),
+    payments: new PaymentTracker(totals),
   }
 }
 describe("log hashing", () => {
@@ -73,7 +73,7 @@ describe("log hashing", () => {
 
 describe("payment diff map", () => {
  it("should start with zero-initialized amounts", () => {
-   const map = new PaymentDiffMap(new Map());
+   const map = new PaymentTracker(new Map());
    const txnMap = randomMapStringNumber(crypto.randomInt(1, 10), 0, 20);
    const i = crypto.randomInt(0, txnMap.size);
    const s = Array.from(txnMap.keys());

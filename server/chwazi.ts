@@ -8,7 +8,7 @@
  *  agree, and checking the proof. Further, a malicious server can be detected by comparing hashes
  *  for a given index.
  */
-import { Entry, makeEntry, PaymentDiffMap, RawEntry, Totals, TransactionLog } from "./log";
+import { Entry, makeEntry, PaymentTracker, RawEntry, Totals, TransactionLog } from "./log";
 import { KeyPair, Proof, prove } from "./vrf";
 import * as assert from "assert";
 
@@ -16,31 +16,30 @@ interface Transaction {
   participants: Map<string, number>
 }
 
+const vrfInput = (prevCounts: ReadonlyMap<string, number>): Buffer => {
+  const input = Array.from(prevCounts.entries()).sort(([a, _a], [b, _b]) => {
+    if (a < b) { return -1 }
+    else if (a > b) { return 1 }
+    else { return 0 }
+  });
+
+  return Buffer.from(input.toString());
+}
+
 export const executeTransaction = (txn: Transaction, secretKey: Buffer, log: TransactionLog): Entry => {
-  const input = Array.from(txn.participants.keys()).sort();
-  const inputBuf = Buffer.from(input.toString());
+  const prevEntry = log.get(log.size - 1);
+  const prevTotals = prevEntry?.payments ?? new PaymentTracker(new Map());
+
+  const inputBuf = vrfInput(prevTotals.counts);
 
   const proof = prove(secretKey, inputBuf);
-  const prevEntry = log.get(log.size - 1);
-  const prevDiffs = prevEntry?.diffs ?? new PaymentDiffMap(new Map());
 
-  const payer = determinePayer(txn, prevDiffs.totals, proof);
-
-  const prevCounts = prevEntry?.counts ?? new Map<string, number>();
-  const newCounts = new Map<string, number>();
-
-  prevCounts.forEach((n, p) => {
-    newCounts.set(p, n);
-  })
-
-  const prevPayerCount = prevCounts.get(payer) ?? 0;
-  newCounts.set(payer, prevPayerCount + 1);
+  const payer = determinePayer(txn, prevTotals.totals, proof);
 
   const rawEntry: RawEntry = {
     amount: 0,
-    diffs: prevDiffs.withTransaction(txn.participants, payer),
+    payments: prevTotals.withTransaction(txn.participants, payer),
     participants: txn.participants,
-    counts: prevCounts,
     proof: proof
   }
 
