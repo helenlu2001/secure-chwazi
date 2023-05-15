@@ -186,6 +186,13 @@ export class EventInterpreter {
         this.sm = new StateMachine(keys, log);
     }
 
+    /**
+     * Interpret the provided event as a state machine command, propagating errors and providing a corresponding response
+     * if the event causes a phase change.
+     *
+     * @param ev the event to interpret
+     * @returns the result of handling the given event
+     */
     public handleEvent(ev: Event): Response {
         try {
             let changed;
@@ -244,10 +251,16 @@ export class EventInterpreter {
         return { "ty": "pending" };
     }
 
+    /**
+     * Get the response to broadcast to all servers.
+     */
     public get toBroadcast(): Response | null {
         return this.responseToBroadcast;
     }
 
+    /**
+     * Mark the response to broadcast as sent, clearing it.
+     */
     public markAsSent(): void {
         this.responseToBroadcast = null;
     }
