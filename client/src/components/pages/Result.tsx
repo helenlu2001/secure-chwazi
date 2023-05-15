@@ -1,11 +1,11 @@
 import React from "react";
-import Entry from "../modules/Entry"
+import "./Result.css"
 
 import { RouteComponentProps } from "@reach/router";
 
 type ResultProps = RouteComponentProps & {chosen: string};
 
-const VerifyBill = (props: ResultProps) => {
+const Result = (props: ResultProps) => {
   return (
     <div className="Result-body">
         <div className="Result-text">
@@ -18,4 +18,4 @@ const VerifyBill = (props: ResultProps) => {
   );
 };
 
-export default VerifyBill;
+export default Result;

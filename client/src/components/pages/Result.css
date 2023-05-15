@@ -1,0 +1,27 @@
+.Result-body {
+    background-color: var(--light-pink);
+    
+    height: 100vh;
+    padding: 16vh 20vw;
+
+}
+
+.Result-text {
+    margin-top: 10vh;
+
+    text-align: center;
+
+    font-family: 'Darumadrop One', cursive;
+    font-size: 64px;
+    color: var(--med-blue);
+}
+
+.Result-chosen {
+    background-color: var(--light-pink);
+
+    text-align: center;
+
+    font-family: 'Braah One', sans-serif;
+    font-size: 128px;
+    color: var(--med-yellow);
+}
