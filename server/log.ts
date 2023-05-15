@@ -53,6 +53,7 @@ export type RawEntry = Omit<Entry, "hash">
 export interface Entry {
   diffs: PaymentDiffMap
   participants: Map<string, number>,
+  counts: Map<string, number>,
   amount: number,
   proof: Proof,
   hash: Buffer

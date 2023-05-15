@@ -26,10 +26,21 @@ export const executeTransaction = (txn: Transaction, secretKey: Buffer, log: Tra
 
   const payer = determinePayer(txn, prevDiffs.totals, proof);
 
+  const prevCounts = prevEntry?.counts ?? new Map<string, number>();
+  const newCounts = new Map<string, number>();
+
+  prevCounts.forEach((n, p) => {
+    newCounts.set(p, n);
+  })
+
+  const prevPayerCount = prevCounts.get(payer) ?? 0;
+  newCounts.set(payer, prevPayerCount + 1);
+
   const rawEntry: RawEntry = {
     amount: 0,
     diffs: prevDiffs.withTransaction(txn.participants, payer),
     participants: txn.participants,
+    counts: prevCounts,
     proof: proof
   }
 
@@ -69,9 +80,26 @@ const determinePayer = (txn: Transaction, totals: ReadonlyMap<string, Totals>, p
     normalizedWeights.set(p, x / totalWeight);
   });
 
-  // Now normalizedWeights should sum to 1 so choose whatever region you end up in.
+  // Now normalizedWeights should sum to 1 so choose whatever region you end up in after turning s into a float from
+  // 0 to 1.
 
-  // Turn the proof into a number from 0 to 1.
+  const s = proof.proof.readUInt32LE(6);
+  const normalizedS = s / Math.pow(2, 32);
 
-  throw new Error("unimplemented!")
+  const normalizedWeightsByName = Array.from(normalizedWeights.entries()).sort(([a, _a], [b, _b]) => {
+    if (a < b) { return -1; }
+    else if (a > b) { return 1; }
+    else { return 0; }
+  });
+
+  let sum = 0;
+  for (const [user, weight] of normalizedWeightsByName) {
+    if (sum < normalizedS && normalizedS <= sum + weight) {
+      return user;
+    }
+
+    sum += weight;
+  }
+
+  assert.fail("shouldn't get here!")
 }
