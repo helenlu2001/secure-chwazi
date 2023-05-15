@@ -28,7 +28,8 @@ const randomTotalsMap = (size: number, maxVal: number): Map<string, Totals> => {
 
     const expected = crypto.randomInt(1, maxVal);
     const actual = crypto.randomInt(Math.round(expected / 2), expected * 2);
-    m.set(s, { expected, actual });
+    const count = crypto.randomInt(1, 10);
+    m.set(s, { expected, actual, count });
   }
 
   return m;
