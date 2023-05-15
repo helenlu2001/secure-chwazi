@@ -181,11 +181,12 @@ export type Response = { ty: "pending" }
 
 export class EventInterpreter {
     private readonly sm: StateMachine;
+    private responseToBroadcast: Response | null = null;
     constructor(keys: KeyPair, log: TransactionLog) {
         this.sm = new StateMachine(keys, log);
     }
 
-    handleEvent(ev: Event): Response {
+    public handleEvent(ev: Event): Response {
         try {
             let changed;
             switch (ev.ty) {
@@ -194,11 +195,13 @@ export class EventInterpreter {
                     assert.ok(changed);
                     assert.ok(this.sm.inner instanceof Phase2);
                     const sm = this.sm.inner;
-                    return {
+                    this.responseToBroadcast = {
                         ty: "p1Response",
                         bill: sm.bill,
                         counts: sm.txnCounts
                     };
+
+                    return this.responseToBroadcast;
                 case "p1Add":
                     changed = this.sm.addParticipant(ev.name, ev.amount);
                     assert.ok(!changed); // Should never change on addParticipant.
@@ -208,32 +211,45 @@ export class EventInterpreter {
                     if (changed) {
                         assert.ok(this.sm.inner instanceof Phase3);
                         const sm = this.sm.inner;
-                        return {
+                        this.responseToBroadcast = {
                             ty: "p2Response",
                             choice: sm.choice,
                             entry: sm.entry
                         }
+
+                        return this.responseToBroadcast;
                     }
                     break;
                 case "p2Reject":
                     changed = this.sm.p2Reject();
                     assert.ok(this.sm.inner instanceof Aborted);
-                    return { ty: "rejected" };
+                    this.responseToBroadcast = { ty: "rejected" };
+                    return this.responseToBroadcast;
                 case "p3Confirm":
                     changed = this.sm.p3Confirm(ev.name);
                     assert.ok(changed);
                     assert.ok(this.sm.inner instanceof Accepted);
-                    return { ty: "p3Response" };
+                    this.responseToBroadcast = { ty: "p3Response" };
+                    return this.responseToBroadcast;
                 case "p3Reject":
                     changed = this.sm.p3Reject();
                     assert.ok(this.sm.inner instanceof Aborted);
-                    return { ty: "rejected" };
+                    this.responseToBroadcast = { ty: "rejected" };
+                    return this.responseToBroadcast;
             }
         } catch (error) {
             return { err: "Error processing event of type " + ev.ty + ": " + error };
         }
 
-        return { "ty": "pending" }
+        return { "ty": "pending" };
+    }
+
+    public get toBroadcast(): Response | null {
+        return this.responseToBroadcast;
+    }
+
+    public markAsSent(): void {
+        this.responseToBroadcast = null;
     }
 
 }
