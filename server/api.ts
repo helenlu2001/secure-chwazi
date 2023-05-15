@@ -12,9 +12,9 @@ import express from "express";
 // import models so we can interact with the database
 
 // import authentication library
-import { Entry, TransactionLog } from "./log";
+import {Entry, RawEntry, TransactionLog} from "./log";
 import { generateKeyPair } from "./vrf";
-import { executeTransaction } from "./chwazi";
+import { proposeTransaction } from "./chwazi";
 
 // api endpoints: all these paths will be prefixed with "/api/"
 const router = express.Router();
@@ -94,7 +94,7 @@ type Phase2Request = {
 }
 
 type Phase2Response = {
-  entry: Entry
+  entry: RawEntry
 }
 
 router.post("/txn/phase2", (req, res) => {
@@ -105,7 +105,7 @@ router.post("/txn/phase2", (req, res) => {
     return;
   }
 
-  const entry = executeTransaction({ participants }, keys.secretKey, log);
+  const entry = proposeTransaction({ participants }, keys.secretKey, log);
 
   const response: Phase2Response = { entry };
   res.send(response);
