@@ -8,6 +8,10 @@ import NotFound from "./pages/NotFound";
 import Homepage from "./pages/Homepage";
 import Join from "./pages/Join"
 import Lobby from "./pages/Lobby"
+import InputChwazi from "./pages/InputChwazi"
+import VerifyBill from "./pages/VerifyBill"
+import Result from "./pages/Result"
+
 
 import { socket } from "../client-socket";
 import User from "../../../shared/User";
@@ -40,6 +44,9 @@ const App = () => {
       <Homepage path="/" />
       <Join path="/join" setChwazi={setChwazi}/>
       <Lobby path="/lobby" code={chwazi} lobby={lobby} />
+      <InputChwazi path="/input" />
+      <VerifyBill path="/verify" bills={[{username: 'test', amount: 10}]}/>
+      <Result path="/result" chosen={"helen"}/>
       <NotFound default={true} />
     </Router>
   );

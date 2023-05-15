@@ -1,0 +1,41 @@
+.InputChwazi-body {
+    background-color: var(--light-pink);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.InputChwazi-title {
+    margin-top: 20vh;
+
+    text-align: center;
+
+    font-family: 'Darumadrop One', cursive;
+    font-size: 64px;
+    color: var(--med-blue);
+}
+
+.InputChwazi-share {
+    width: 75vw;
+    border: none;
+    background-color: var(--light-pink);
+
+    text-align: center;
+
+    font-family: 'Braah One', sans-serif;
+    font-size: 128px;
+    color: var(--med-yellow);
+}
+
+.InputChwazi-share:focus {
+    outline: none;
+}
+
+.InputChwazi-error {
+    text-align: center;
+
+    font-family: 'Braah One', sans-serif;
+    font-size: 24px;
+    color: var(--med-pink);
+}
