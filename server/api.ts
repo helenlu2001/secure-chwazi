@@ -75,17 +75,30 @@ router.post("/log/get/:index", async (req, res) => {
   res.send({ index });
 })
 
-type StartTransactionRequest = {
+type Phase1Request = {
+  username: string,
+  amount: number
+}
+
+type Phase1Response = {
   participants: Map<string, number>
 }
 
-type StartTransactionResponse = {
-  entry: Entry,
-  index: number,
+router.post("/txn/phase1", (req, res) => {
+  // TODO: should aggregate a bill for the given txn ID
+})
+
+type Phase2Request = {
+  // TODO this should use the relevant state for an accepted or rejected request rather than re-sending participants.
+  participants: Map<string, number>
 }
 
-router.post("/txn/start", (req, res) => {
-  const body: StartTransactionRequest = req.body;
+type Phase2Response = {
+  entry: Entry
+}
+
+router.post("/txn/phase2", (req, res) => {
+  const body: Phase2Request = req.body;
   const participants = body.participants;
   if (participants === undefined) {
     res.status(400);
@@ -93,12 +106,23 @@ router.post("/txn/start", (req, res) => {
   }
 
   const entry = executeTransaction({ participants }, keys.secretKey, log);
-  const index = log.size;
-  log.add(entry);
 
-  const response: StartTransactionResponse = { index, entry };
+  const response: Phase2Response = { entry };
   res.send(response);
   return;
+})
+
+type Phase3Request = {
+  transactionID: string,
+  accepted: boolean,
+}
+
+type Phase3Response = {
+  success: boolean
+}
+
+router.post("/txn/phase3", (req, res) => {
+  // TODO: if all accept the transaction, commit it by adding it to the log!
 })
 
 // anything else falls to this "not found" case
